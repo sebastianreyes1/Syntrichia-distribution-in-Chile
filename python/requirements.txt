@@ -1,0 +1,6 @@
+numpy
+pandas
+geopandas>=1.0   # uses GeoSeries.union_all()
+shapely>=2.0
+matplotlib
+pillow
