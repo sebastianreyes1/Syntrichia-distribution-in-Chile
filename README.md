@@ -1,14 +1,14 @@
 # Code: *Syntrichia* in Chile. Occurrence data, distribution models and protected areas
 
-This repository contains the code to reproduce the analyses, figures and tables of the manuscript *Are mosses protected where they occur? Distribution and sampling gaps in the genus Syntrichia (Pottiaceae: Bryophyta) in Chile* (Reyes, Fontúrbel and Atala). The data and models are built in **R**; the maps of records, richness and protected areas (Figs. 1, 2, 4 and S1) and Table S3 are drawn in **Python**. Run every script from the project root (the folder that contains this README), in the order below.
+This repository contains the code to reproduce the analyses, figures and tables of the manuscript *Are mosses protected where they occur? Distribution and sampling gaps in the genus Syntrichia (Pottiaceae: Bryophyta) in Chile* (Reyes, Fontúrbel and Atala, submitted to *Biodiversity and Conservation*). The data and models are built in **R**; the maps of records, richness and protected areas (Figs. 1, 2, 4 and S1) and Table S3 are drawn in **Python**. Run every script from the project root (the folder that contains this README), in the order below.
 
-Data S1 (every record with its cleaning and use flags) is deposited at [Figshare DOI to be added]. Script `06` rebuilds it from the raw sources.
+All GBIF records used in the article (Data S1, with their cleaning and use flags) and the record counts per cleaning step and per species (Table S1 and Table S3 of the Supplementary Material) are deposited in Figshare: https://doi.org/10.6084/m9.figshare.34770510. The only data not deposited are the herbarium records of the J. Larraín database (1,314 records), which are not public and are available on request from the authors. Script `06` rebuilds the full dataset and `06b` extracts the GBIF part that is deposited.
 
 ## Quick map: manuscript item → script
 
 | Manuscript item | Script | File written |
 |---|---|---|
-| Data S1 | `06_figshare_dataset.R` | `data/figshare/Syntrichia_occurrences_with_cleaning_flags.csv` |
+| Data S1 | `06_figshare_dataset.R`, then `06b_gbif_only_dataset.R` | `data/figshare/Syntrichia_GBIF_occurrences_with_cleaning_flags.csv` (full version with the Larraín records: `Syntrichia_occurrences_with_cleaning_flags.csv`) |
 | Table S1 (cleaning steps) | `06_figshare_dataset.R` | `data/figshare/cleaning_steps_record_counts.csv` |
 | Fig. 1, Fig. 2, Fig. 4, Fig. S1 | `python/make_figures.py` | `figures/Fig1_…`, `Fig2_…`, `Fig4_…`, `FigS1_…` (PNG, PDF, TIFF) |
 | Table S3 (protected areas) | `python/make_figures.py` | `figures/TableS3_species_in_protected_areas.csv` |
@@ -29,10 +29,11 @@ Data S1 (every record with its cleaning and use flags) is deposited at [Figshare
 | `02_extract_climate.R` | Downloads the 19 CHELSA 2.1 bioclimatic variables (1981–2010) and extracts them at each record | `data/syntrichia_occ_with_climate.csv`, `data/chelsa_global/` |
 | `03_vif_selection.R` | Stepwise VIF (`usdm::vifstep`, threshold 5). Keeps bio02, bio04, bio08, bio09, bio15, bio18, bio19 | `data/syntrichia_occ_with_climate_vif.csv` |
 | `04_chile_layers.R` | Crops the 7 variables to Chile + 200 km (projection area and study area of the species models) | `data/chile_layers/stack_final_chile.tif` |
-| `05_clean_occurrences.R` | Cleaning steps 0b–6 (Table S1), georeferencing of Larraín records from `data/larrain_georeferences.csv`, study area and thinning to one record per 30-arcsec cell | `data/clean/occ_*.csv`, `excluded_records.csv`, `cleaning_table.csv` |
+| `05_clean_occurrences.R` | Cleaning steps 0b–6 (Table S1), optional georeferencing of Larraín records (`data/larrain_georeferences.csv`, not distributed), study area and thinning to one record per 30-arcsec cell | `data/clean/occ_*.csv`, `excluded_records.csv`, `cleaning_table.csv` |
 | `06_figshare_dataset.R` | Builds Data S1, Table S1 and the records per species in Chile | `data/figshare/` |
+| `06b_gbif_only_dataset.R` | Extracts the GBIF records of Data S1 (without the Larraín database) for open deposit | `data/figshare/Syntrichia_GBIF_occurrences_with_cleaning_flags.csv` |
 
-After cleaning, 1,857 records fall in continental Chile (1,595 identified to species, 39 species). The genus-level model uses 21,242 worldwide presences.
+After cleaning, 1,857 records fall in Chile (1,595 identified to species, 39 species). The genus-level model uses 21,242 worldwide presences.
 
 ## 2. Distribution models
 
@@ -41,7 +42,7 @@ After cleaning, 1,857 records fall in continental Chile (1,595 identified to spe
 | `07_download_chelsa_global.R` | Downloads the 7 global layers needed by the genus and *S. anderssonii* models (not needed if `02` was run on the same machine) | `data/chelsa_global/` |
 | `08_sdm_model.R` | Fits GLM, GAM, MaxNet, RF and SVM with flexsdm (spatial block cross-validation), keeps the algorithms with TSS ≥ 0.6 and Boyce > 0, averages them and projects onto Chile | `data/results/<taxon>_<mode>/` |
 | `09_variable_importance.R` | Permutation variable importance and partial response curves | `variable_importance.csv`, `response_curves.csv` |
-| `10_mess.R` | MESS between continental Chile and the calibration data of each model | `mess/` |
+| `10_mess.R` | MESS between Chile and the calibration data of each model | `mess/` |
 
 Usage: `Rscript 08_sdm_model.R <taxon> <mode>`.
 
@@ -97,7 +98,7 @@ R figures are written as TIFF (600 dpi, LZW) and PDF in `figures/`. Python figur
 | Protected-area layers | Downloaded by `11` |
 | Natural Earth 1:10m: `ne_10m_admin_0_countries`, `ne_10m_roads`, `ne_10m_populated_places` | https://www.naturalearthdata.com, unzip into `data/natural_earth/` (the Python script downloads the countries layer on its own) |
 
-`data/larrain_georeferences.csv` lists the Larraín records that had no coordinates, with the decision taken for each. None could be georeferenced within the 5 km uncertainty limit, so all were excluded.
+The Larraín records that had no coordinates (21 specimens) could not be georeferenced within the 5 km uncertainty limit, so all were excluded. `05_clean_occurrences.R` can read an optional `data/larrain_georeferences.csv` (columns `original_id`, `original_name`, `lat_dec`, `lon_dec`, `uncertainty_radius_km`), but the file is not distributed and the results do not need it.
 
 ## Software
 
@@ -109,11 +110,13 @@ R 4.4.0 with flexsdm 1.4.0, maxnet, usdm, terra, sf, data.table, dplyr, readxl, 
 
 **MaxNet:** `flexsdm::fit_max()` called without the `background` argument fits each cross-validation fold with presences and pseudo-absences, but fits the final model with presences only, which gives an empty model. `08_sdm_model.R` refits the final MaxNet model with all presences and pseudo-absences, using the same settings as the folds. Cross-validation metrics are not affected.
 
-**Units:** in the modelling data, the CHELSA temperature variables (bio02, bio04, bio08, bio09) are divided by 10. `fig_variables.R` converts them back for the response curves.
+**Units:** in the modeling data, the CHELSA temperature variables (bio02, bio04, bio08, bio09) are divided by 10. `fig_variables.R` converts them back for the response curves.
 
 **Record identifiers:** `recordID` is assigned in `01` and carried through every step, so each record in Data S1 can be traced to the models and maps that used it.
 
-**Two languages:** Figs. 1, 2, 4, S1 and Table S3 are produced with Python (geopandas, matplotlib) and the remaining figures with R (terra, sf, ggplot2). Both use the same projection, base map and colours.
+**Full dataset needed:** `python/make_figures.py` and `12_sampling_bias.R` read the full Data S1 (`data/figshare/Syntrichia_occurrences_with_cleaning_flags.csv`), which includes the Larraín records. With the GBIF-only file they stop at the check for 1,857 records, because that subset has fewer records than the article. The full file can be requested from the authors.
+
+**Two languages:** Figs. 1, 2, 4, S1 and Table S3 are produced with Python (geopandas, matplotlib) and the remaining figures with R (terra, sf, ggplot2). Both use the same projection, base map and colors.
 
 ## Citation
 
